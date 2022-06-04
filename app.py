@@ -2,7 +2,7 @@ import streamlit as st
 import pickle as pk
 import difflib
 import requests
-
+import blosc
 def recommend(movie):
     list_of_title = movies_list['title'].tolist()
     all_close_match = difflib.get_close_matches(movie, list_of_title)
@@ -34,7 +34,7 @@ user_movie_name = st.selectbox(
     movies_title_list
 )
 
-if st.button('Recommend'):
+if st.button('Recommend Movies'):
     names, posters = recommend(user_movie_name)
     movie1, movie2, movie3 = st.columns(3)
     with movie1:
