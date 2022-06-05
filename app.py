@@ -2,7 +2,34 @@ import streamlit as st
 import pickle as pk
 import difflib
 import requests
-import blosc
+import pathlib
+import pandas as pd
+import dropbox
+from dropbox.exceptions import AuthError
+import urllib.request
+import os
+
+DROPBOX_ACCESS_TOKEN = 'sl.BI_HT0b8DDYrk8iEQeuVm2lA55wlVw_F_AKDKApvOOdjn72fn_KPBI-_Z6aZGehDpdJGyLFz-aWFw9pXYPmVp9Okaqxr26OhWl4BNoykibjrxPh5NdOCdfpm4l9cmVL1lgXV1TQkDfA'
+
+def dropbox_connect():
+    try:
+        dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+        print('...authenticated with Dropbox owned by ' + dbx.users_get_current_account().name.display_name)
+    except AuthError as e:
+        print('Error connecting to Dropbox with access token: ' + str(e))
+    return dbx
+
+def dropbox_download_file():
+    try:
+        dbx = dropbox_connect()
+
+        with open('similarity.pkl', 'wb') as f:
+            metadata, result = dbx.files_download(path='id:ERdBKSH3-FAAAAAAAAAADQ')
+            f.write(result.content)
+            print('success')
+    except Exception as e:
+        print('Error downloading file from Dropbox: ' + str(e))
+
 def recommend(movie):
     list_of_title = movies_list['title'].tolist()
     all_close_match = difflib.get_close_matches(movie, list_of_title)
@@ -26,7 +53,11 @@ def movie_poster(movie_id):
 movies_list = pk.load(open('movies.pkl', 'rb'))
 movies_title_list = movies_list['title'].values
 
-similarity = pk.load(open('similarity.pkl', 'rb'))
+if os.path.isfile('./similarity.pkl') == False:
+    print('in')
+    dropbox_download_file()
+
+similarity = pk.load(open('test.pkl', 'rb'))
 st.title('Movie Recommendation System')
 
 user_movie_name = st.selectbox(
