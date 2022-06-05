@@ -6,7 +6,7 @@ import dropbox
 from dropbox.exceptions import AuthError
 import os
 
-DROPBOX_ACCESS_TOKEN = 'sl.BI_HT0b8DDYrk8iEQeuVm2lA55wlVw_F_AKDKApvOOdjn72fn_KPBI-_Z6aZGehDpdJGyLFz-aWFw9pXYPmVp9Okaqxr26OhWl4BNoykibjrxPh5NdOCdfpm4l9cmVL1lgXV1TQkDfA'
+DROPBOX_ACCESS_TOKEN = 'sl.BI8TAN6AFUxi9YppRePBrnqDGxugh_LKH4wR0G3ljq7ONPGC8Hz-Gg74MPXLNC2WoAC26c6v6aEQjFvmrngOtt411puF7kD4ZiwrmadPYCsujCd_mX9XbpunZ28Wjaq3mNJjLPPgw-U'
 
 def dropbox_connect():
     try:
@@ -17,6 +17,7 @@ def dropbox_connect():
     return dbx
 
 def dropbox_download_file():
+    global similarity
     try:
         dbx = dropbox_connect()
 
@@ -24,6 +25,7 @@ def dropbox_download_file():
             metadata, result = dbx.files_download(path='id:ERdBKSH3-FAAAAAAAAAADQ')
             f.write(result.content)
             print('success')
+            similarity = pk.load(open('similarity.pkl', 'rb'))
     except Exception as e:
         print('Error downloading file from Dropbox: ' + str(e))
 
@@ -51,10 +53,10 @@ movies_list = pk.load(open('movies.pkl', 'rb'))
 movies_title_list = movies_list['title'].values
 
 if os.path.isfile('./similarity.pkl') == False:
-    print('in')
     dropbox_download_file()
+else:
+    similarity = pk.load(open('similarity.pkl', 'rb'))
 
-similarity = pk.load(open('similarity.pkl', 'rb'))
 st.title('Movie Recommendation System')
 
 user_movie_name = st.selectbox(
