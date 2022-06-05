@@ -54,7 +54,7 @@ if os.path.isfile('./similarity.pkl') == False:
     print('in')
     dropbox_download_file()
 
-similarity = pk.load(open('test.pkl', 'rb'))
+similarity = pk.load(open('similarity.pkl', 'rb'))
 st.title('Movie Recommendation System')
 
 user_movie_name = st.selectbox(
