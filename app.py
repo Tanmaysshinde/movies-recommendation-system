@@ -2,32 +2,41 @@ import streamlit as st
 import pickle as pk
 import difflib
 import requests
-import dropbox
-from dropbox.exceptions import AuthError
 import os
+import io
+from googleapiclient.http import MediaIoBaseDownload
 
-DROPBOX_ACCESS_TOKEN = 'sl.BI8TAN6AFUxi9YppRePBrnqDGxugh_LKH4wR0G3ljq7ONPGC8Hz-Gg74MPXLNC2WoAC26c6v6aEQjFvmrngOtt411puF7kD4ZiwrmadPYCsujCd_mX9XbpunZ28Wjaq3mNJjLPPgw-U'
+from Google import Create_Service
 
-def dropbox_connect():
-    try:
-        dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
-        print('...authenticated with Dropbox owned by ' + dbx.users_get_current_account().name.display_name)
-    except AuthError as e:
-        print('Error connecting to Dropbox with access token: ' + str(e))
-    return dbx
+CLIENT_SECRECT_FILE = 'client_secret_GoogleCloudDemo.json'
+API_NAME = 'drive'
+API_VERSION = 'v3'
+SCOPE = ['https://www.googleapis.com/auth/drive']
 
-def dropbox_download_file():
-    global similarity
-    try:
-        dbx = dropbox_connect()
+if os.path.isfile('./similarity.pkl') == False:
+    service = Create_Service(CLIENT_SECRECT_FILE, API_NAME, API_VERSION, SCOPE)
 
-        with open('similarity.pkl', 'wb') as f:
-            metadata, result = dbx.files_download(path='id:ERdBKSH3-FAAAAAAAAAADQ')
-            f.write(result.content)
-            print('success')
-            similarity = pk.load(open('similarity.pkl', 'rb'))
-    except Exception as e:
-        print('Error downloading file from Dropbox: ' + str(e))
+    file_ids =['1ztowtF-pX4sD27xpBAUf1DkYxk9ukVIB']
+    file_names = ['similarity.pkl']
+
+    for file_id, file_name in zip(file_ids, file_names):
+        request = service.files().get_media(fileId = file_id)
+
+        fh = io.BytesIO()
+        downloader = MediaIoBaseDownload(fd = fh, request = request)
+
+        done = False
+
+        while not done:
+            status, done = downloader.next_chunk()
+            print('Download progress {0}%'.format(status.progress() * 100))
+        fh.seek(0)
+
+        with open('./similarity.pkl', 'wb') as f:
+                f.write(fh.read())
+                f.close()
+else:
+    similarity = pk.load(open('similarity.pkl', 'rb'))
 
 def recommend(movie):
     list_of_title = movies_list['title'].tolist()
@@ -51,11 +60,6 @@ def movie_poster(movie_id):
 
 movies_list = pk.load(open('movies.pkl', 'rb'))
 movies_title_list = movies_list['title'].values
-
-if os.path.isfile('./similarity.pkl') == False:
-    dropbox_download_file()
-else:
-    similarity = pk.load(open('similarity.pkl', 'rb'))
 
 st.title('Movie Recommendation System')
 
